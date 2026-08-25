@@ -1,15 +1,10 @@
 package ch.bzz;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Scanner;
 
 public class LibraryAppMain {
@@ -18,24 +13,36 @@ public class LibraryAppMain {
     static {
         COMMANDS.put("help", "shows this help text");
         COMMANDS.put("listBooks", "lists all books in the library");
+        COMMANDS.put("importBooks", "imports books from a .xlsx, .tsv or .csv file, e.g. importBooks data\\books.tsv");
         COMMANDS.put("quit", "exits the application");
     }
 
     public static void main(String[] args) {
+        DatabaseConfig config = DatabaseConfig.load("config.properties");
+        BookRepository bookRepository = new BookRepository(config);
+        BookFileReader bookFileReader = new BookFileReader();
+
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            String s = scanner.next();
-            if (s.equals("quit")) {
+            String line = scanner.nextLine().trim();
+            String[] parts = line.split("\\s+", 2);
+            String command = parts[0];
+            String argument = parts.length > 1 ? parts[1] : null;
+
+            if (command.equals("quit")) {
                 break;
             }
-            else if (s.equals("help")) {
+            else if (command.equals("help")) {
                 printHelp();
             }
-            else if (s.equals("listBooks")) {
-                listBooks();
+            else if (command.equals("listBooks")) {
+                listBooks(bookRepository);
+            }
+            else if (command.equals("importBooks")) {
+                importBooks(bookFileReader, bookRepository, argument);
             }
             else {
-                System.out.println("Unknown command: " + s);
+                System.out.println("Unknown command: " + command);
             }
 
         }
@@ -50,39 +57,32 @@ public class LibraryAppMain {
         }
     }
 
-    private static void listBooks() {
-        Properties config = loadConfig();
-        String url = config.getProperty("DB_URL");
-        String user = config.getProperty("DB_USER");
-        String password = config.getProperty("DB_PASSWORD");
-
-        String sql = "SELECT id, isbn, title, author, publication_year FROM books ORDER BY id";
-        try (Connection connection = DriverManager.getConnection(url, user, password);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
-
-            while (resultSet.next()) {
-                System.out.printf("%d: %s by %s (%s) [%d]%n",
-                        resultSet.getInt("id"),
-                        resultSet.getString("title"),
-                        resultSet.getString("author"),
-                        resultSet.getString("isbn"),
-                        resultSet.getInt("publication_year"));
+    private static void listBooks(BookRepository bookRepository) {
+        try {
+            List<Book> books = bookRepository.findAll();
+            for (Book book : books) {
+                System.out.printf("id: %d, isbn: %s, title: %s, author: %s, publication_year: %d%n",
+                        book.id(), book.isbn(), book.title(), book.author(), book.publicationYear());
             }
         } catch (SQLException e) {
             System.out.println("Could not load books: " + e.getMessage());
         }
     }
 
-    private static Properties loadConfig() {
-        Properties properties = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            properties.load(in);
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Could not read config.properties. Copy config.properties.template to config.properties and fill in the DB connection details.",
-                    e);
+    private static void importBooks(BookFileReader bookFileReader, BookRepository bookRepository, String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            System.out.println("Usage: importBooks <path-to-file> (.xlsx, .tsv or .csv)");
+            return;
         }
-        return properties;
+
+        try {
+            List<Book> books = bookFileReader.read(filePath);
+            int imported = bookRepository.insertAll(books);
+            System.out.println("Imported " + imported + " book(s) from " + filePath);
+        } catch (IOException e) {
+            System.out.println("Could not read file '" + filePath + "': " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Could not import books: " + e.getMessage());
+        }
     }
 }

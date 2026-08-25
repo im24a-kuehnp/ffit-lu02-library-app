@@ -12,6 +12,7 @@ repositories {
 dependencies {
     // dependencies for the application
     implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // dependencies for testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
