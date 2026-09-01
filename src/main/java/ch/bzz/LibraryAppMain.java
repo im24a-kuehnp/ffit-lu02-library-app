@@ -14,6 +14,7 @@ public class LibraryAppMain {
         COMMANDS.put("help", "shows this help text");
         COMMANDS.put("listBooks", "lists all books in the library");
         COMMANDS.put("importBooks", "imports books from a .xlsx, .tsv or .csv file, e.g. importBooks data\\books.tsv");
+        COMMANDS.put("clearBooks", "removes all books from the database");
         COMMANDS.put("quit", "exits the application");
     }
 
@@ -40,6 +41,9 @@ public class LibraryAppMain {
             }
             else if (command.equals("importBooks")) {
                 importBooks(bookFileReader, bookRepository, argument);
+            }
+            else if (command.equals("clearBooks")) {
+                clearBooks(bookRepository);
             }
             else {
                 System.out.println("Unknown command: " + command);
@@ -83,6 +87,15 @@ public class LibraryAppMain {
             System.out.println("Could not read file '" + filePath + "': " + e.getMessage());
         } catch (SQLException e) {
             System.out.println("Could not import books: " + e.getMessage());
+        }
+    }
+
+    private static void clearBooks(BookRepository bookRepository) {
+        try {
+            int deleted = bookRepository.deleteAll();
+            System.out.println("Deleted " + deleted + " book(s) from the database");
+        } catch (SQLException e) {
+            System.out.println("Could not clear books: " + e.getMessage());
         }
     }
 }

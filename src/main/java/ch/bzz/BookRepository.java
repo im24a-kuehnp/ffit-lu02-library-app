@@ -78,6 +78,19 @@ public class BookRepository {
         }
     }
 
+    int deleteAll() throws SQLException {
+        try (Connection connection = connect();
+             Statement statement = connection.createStatement()) {
+            String deleteSql = "DELETE FROM books";
+            int deleted = statement.executeUpdate(deleteSql);
+            
+            String resetSeqSql = "ALTER SEQUENCE books_id_seq RESTART WITH 1";
+            statement.executeUpdate(resetSeqSql);
+            
+            return deleted;
+        }
+    }
+
     private Connection connect() throws SQLException {
         return DriverManager.getConnection(config.url(), config.user(), config.password());
     }
