@@ -47,6 +47,7 @@ jobs:
           echo "DB_URL=jdbc:postgresql://localhost:5432/testdb" > config.properties
           echo "DB_USER=testuser" >> config.properties
           echo "DB_PASSWORD=testpass" >> config.properties
+          echo "JWT_SECRET=ci-test-secret-with-at-least-32-characters" >> config.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

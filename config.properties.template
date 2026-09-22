@@ -2,3 +2,5 @@
 DB_URL=
 DB_USER=
 DB_PASSWORD=
+# Secret used to sign JWTs, must be at least 32 characters long
+JWT_SECRET=

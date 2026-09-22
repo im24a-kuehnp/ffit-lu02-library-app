@@ -13,6 +13,12 @@ dependencies {
     // dependencies for the application
     implementation 'org.postgresql:postgresql:42.7.3'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    implementation 'io.javalin:javalin:6.7.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation 'org.slf4j:slf4j-simple:2.0.16'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.7'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.7'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.7'
 
     // dependencies for testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
